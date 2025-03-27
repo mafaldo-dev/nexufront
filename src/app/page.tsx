@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search as SearchIcon, Loader2 } from "lucide-react";
-import RandomBannerImage from "../components/RandomBannerImage";
+import image from '../assets/image1.avif'
+import Image from "next/image";
 
 export default function Search() {
   const router = useRouter();
@@ -30,7 +31,8 @@ export default function Search() {
           Encontre o que você está procurando
         </p>
 
-        <RandomBannerImage />
+        {/* <RandomBannerImage /> */}
+        <Image src={image} width={250} height={200} alt="Banner"/>
 
         <form onSubmit={handleSearch} className="relative mb-8">
           <Input
