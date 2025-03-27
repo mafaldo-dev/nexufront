@@ -32,7 +32,7 @@ export default function Search() {
         </p>
 
         {/* <RandomBannerImage /> */}
-        <Image src={image} width={250} height={200} alt="Banner"/>
+        <Image src={image} width={400} height={200} className="rounded-xl flex m-auto mb-12" alt="Banner"/>
 
         <form onSubmit={handleSearch} className="relative mb-8">
           <Input
