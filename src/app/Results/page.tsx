@@ -1,7 +1,7 @@
 "use client";
 
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
 import { Loader2, SearchIcon } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -33,31 +33,28 @@ function ResultsPageContent() {
 
     setLoading(true);
 
-    const timeoutId = setTimeout(() => {
-      fetch(`https://nexuback.onrender.com/api/searchAll?q=${encodeURIComponent(query)}`, { signal })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.results && Array.isArray(data.results)) {
-            const validResults = data.results.filter(
-              (result: Result) => result.title && result.snippet && result.url
-            );
-            setResults(validResults);
-          } else {
-            setResults([]);
-          }
-        })
-        .catch((error) => {
-          if (error.name !== "AbortError") {
-            setResults([]);
-          }
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }, 500);
+    fetch(`https://nexuback.onrender.com/api/searchAll?q=${encodeURIComponent(query)}`, { signal })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.results && Array.isArray(data.results)) {
+          const validResults = data.results.filter(
+            (result: Result) => result.title && result.snippet && result.url
+          );
+          setResults(validResults);
+        } else {
+          setResults([]);
+        }
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") {
+          setResults([]);
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     return () => {
-      clearTimeout(timeoutId);
       controller.abort();
     };
   }, [query]);
@@ -67,7 +64,8 @@ function ResultsPageContent() {
     return cleanup;
   }, [fetchResults]);
 
-  const handleSearch = () => {
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
     if (searchTerm.trim()) {
       router.push(`/results?q=${encodeURIComponent(searchTerm)}`);
     }
@@ -87,13 +85,14 @@ function ResultsPageContent() {
             <Input
               type="text"
               placeholder="Digite sua busca aqui..."
+              value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full h-12 bg-gray-200 pl-4 pr-12 text-lg rounded-xl border-2 border-blue-200 focus:border-blue-400"
             />
             <Button
               type="submit"
               className="absolute right-2 top-2 rounded-full w-8 h-8 p-0 bg-blue-500 hover:bg-blue-600"
-              disabled={true}              
+              disabled={!searchTerm.trim()}
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -153,4 +152,10 @@ function ResultsPageContent() {
   );
 }
 
-export default ResultsPageContent;
+export default function ResultsPage() {
+  return (
+    <Suspense fallback={<p>Carregando...</p>}>
+      <ResultsPageContent />
+    </Suspense>
+  );
+}
