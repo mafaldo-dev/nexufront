@@ -24,7 +24,7 @@ function ResultsPageContent() {
     if (!query) return;
 
     setLoading(true);
-    fetch(`http://localhost:3000/api/searchAll?q=${encodeURIComponent(query)}`)
+    fetch(`https://nexuback.orender.com/api/searchAll?q=${encodeURIComponent(query)}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.results && Array.isArray(data.results)) {
