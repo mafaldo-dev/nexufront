@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import { useSearchHandler } from "@/hooks/useSeachHandler";
 
@@ -21,7 +21,7 @@ interface Result {
 
 function ResultsPageContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
+ 
   const query = searchParams.get("q") || "";
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(false);
