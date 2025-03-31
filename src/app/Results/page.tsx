@@ -35,38 +35,40 @@ function ResultsPageContent() {
     const controller = new AbortController();
     const signal = controller.signal;
   
-    let isActive = true; // 🔥 Variável de controle para evitar atualizar estado após o abort
+    let isActive = true; 
   
     const fetchResults = async () => {
       try {
         setLoading(true);
   
         const response = await fetch(`https://nexuback.onrender.com/api/searchAll?q=${encodeURIComponent(query)}`, { signal });
+        //const response = await fetch(`http://localhost:3002/api/searchAll?q=${encodeURIComponent(query)}`);
         if (!response.ok) throw new Error('Erro ao buscar resultados');
+
   
         const data = await response.json();
-        if (isActive) {  // 🔥 Só atualiza o estado se a requisição ainda for válida
+        if (isActive) { 
           setResults(data.results?.filter((result: Result) => result.title && result.snippet && result.url) || []);
         }
       } catch (error) {
-        if (isActive) { // 🔥 Ignora erro de abort
+        if (isActive) { 
           console.error("Erro ao buscar resultados", error);
           setResults([]);
         }
       } finally {
-        if (isActive) setLoading(false); // 🔥 Evita atraso no carregamento
+        if (isActive) setLoading(false);
       }
     };
   
     fetchResults();
   
     return () => {
-      isActive = false; // 🔥 Impede atualizações no estado após o abort
+      isActive = false; 
       controller.abort();
     };
   }, [query]);
   
-  const sortedResults = (showMore ? results : results.slice(0, 20)).sort((a, b) => (b.image ? 1 : -1));
+  const sortedResults = (showMore ? results : results.slice(0, 12)).sort((a, b) => (b.image ? 1 : -1));
 
   return (
     <div className="min-h-screen p-6 text-gray-900">
@@ -117,7 +119,7 @@ function ResultsPageContent() {
               className="flex items-center gap-4 p-4 bg-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border"
             >
               {result.image ? (
-                <Image width={90} height={90} src={result.image} alt={result.title || "Imagem"} className="w-32 h-32 object-cover rounded-lg" />
+                <Image width={90} height={90} src={result.image} alt="Sem imagem"className="w-32 h-32 object-cover rounded-lg" />
               ) : (
                 <div className="w-32 h-32 bg-gray-300 rounded-lg flex items-center justify-center">
                   <span className="text-gray-600">Sem imagem</span>
