@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search as SearchIcon, Loader2 } from "lucide-react";
@@ -11,7 +10,6 @@ import logo from '../assets/NexusEarth.png'
 import { useSearchHandler } from "@/hooks/useSeachHandler";
 
 export default function Search() {
-  const router = useRouter();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const { searchTerm, setSearchTerm, handleSearch } = useSearchHandler(query);
