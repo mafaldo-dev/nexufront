@@ -8,19 +8,16 @@ import { Search as SearchIcon, Loader2 } from "lucide-react";
 import Image from "next/image";
 import logo from '../assets/NexusEarth.png'
 
+import { useSearchHandler } from "@/hooks/useSeachHandler";
+
 export default function Search() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const { searchTerm, setSearchTerm, handleSearch } = useSearchHandler(query);
 
-  const handleSearch = async (event: React.FormEvent) => {
-    event.preventDefault(); // Evita recarregar a página ao enviar o formulário
-    setLoading(true);
-    if (!query.trim()) return;
 
-    router.push(`/Results?q=${encodeURIComponent(query)}`);
-  };
-
+  console.log(setQuery,setLoading)
   return (
 	<div className="min-h-screen from-blue-50 to-white p-4 md:p-8">
            <div className="max-w-3xl flex flex-col mt-18 mx-auto pt-8 md:pt-16">
@@ -38,8 +35,8 @@ export default function Search() {
           	   <Input
            	      type="text"
             	      placeholder="Digite sua busca aqui..."
-            	      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
+            	      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
             	      autoFocus
                       className="w-full h-12 bg-gray-200 pl-4 pr-12 text-lg rounded-xl border-2 border-blue-200 focus:border-blue-400"
                    />

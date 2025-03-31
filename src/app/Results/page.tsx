@@ -1,10 +1,13 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { Loader2, SearchIcon } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+
+import { useSearchHandler } from "@/hooks/useSeachHandler";
+
+import { Loader2, SearchIcon } from "lucide-react";
 import logo from "../../assets/NexusEarth.png";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,58 +23,50 @@ function ResultsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const query = searchParams.get("q") || "";
-  const [searchTerm, setSearchTerm] = useState(query);
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(false);
   const [showMore, setShowMore] = useState(false);
 
-  const fetchResults = useCallback(() => {
-    if (!query) return;
+  const { searchTerm, setSearchTerm, handleSearch } = useSearchHandler(query);
 
+  useEffect(() => {
+    if (!query) return;
+  
     const controller = new AbortController();
     const signal = controller.signal;
-
-    setLoading(true);
-
-    fetch(`https://nexuback.onrender.com/api/searchAll?q=${encodeURIComponent(query)}`, { signal })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.results && Array.isArray(data.results)) {
-          const validResults = data.results.filter(
-            (result: Result) => result.title && result.snippet && result.url
-          );
-          setResults(validResults);
-        } else {
+  
+    let isActive = true; // 🔥 Variável de controle para evitar atualizar estado após o abort
+  
+    const fetchResults = async () => {
+      try {
+        setLoading(true);
+  
+        const response = await fetch(`https://nexuback.onrender.com/api/searchAll?q=${encodeURIComponent(query)}`, { signal });
+        if (!response.ok) throw new Error('Erro ao buscar resultados');
+  
+        const data = await response.json();
+        if (isActive) {  // 🔥 Só atualiza o estado se a requisição ainda for válida
+          setResults(data.results?.filter((result: Result) => result.title && result.snippet && result.url) || []);
+        }
+      } catch (error) {
+        if (isActive) { // 🔥 Ignora erro de abort
+          console.error("Erro ao buscar resultados", error);
           setResults([]);
         }
-      })
-      .catch((error) => {
-        if (error.name !== "AbortError") {
-          setResults([]);
-        }
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-
+      } finally {
+        if (isActive) setLoading(false); // 🔥 Evita atraso no carregamento
+      }
+    };
+  
+    fetchResults();
+  
     return () => {
+      isActive = false; // 🔥 Impede atualizações no estado após o abort
       controller.abort();
     };
   }, [query]);
-
-  useEffect(() => {
-    const cleanup = fetchResults();
-    return cleanup;
-  }, [fetchResults]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchTerm.trim()) {
-      router.push(`/results?q=${encodeURIComponent(searchTerm)}`);
-    }
-  };
-
-  const sortedResults = (showMore ? results : results.slice(0, 10)).sort((a, b) => (b.image ? 1 : -1));
+  
+  const sortedResults = (showMore ? results : results.slice(0, 20)).sort((a, b) => (b.image ? 1 : -1));
 
   return (
     <div className="min-h-screen p-6 text-gray-900">
@@ -128,20 +123,16 @@ function ResultsPageContent() {
                   <span className="text-gray-600">Sem imagem</span>
                 </div>
               )}
-
               <div className="flex-1">
-                <a href={result.url} target="_blank" rel="noopener noreferrer" className="text-lg font-medium text-blue-600 hover:underline block">
-                  {result.title}
+                <a href={result.url || "#"} target="_blank" rel="noopener noreferrer" className="text-lg font-medium text-blue-600 hover:underline block">
+                  {result.title || "Título não disponível"}
                 </a>
-                <p className="text-gray-700 text-sm mt-1">{result.snippet}</p>
+                <p className="text-gray-700 text-sm mt-1">{result.snippet ? result.snippet : "Descrição não disponível"}</p>
                 <p className="text-gray-500 text-xs mt-1">{result.url}</p>
               </div>
             </div>
           ))}
-          <button
-            onClick={() => setShowMore(!showMore)}
-            className="bg-white underline cursor-pointer px-2 py-2 rounded-sm font-semibold flex m-auto text-blue-600 hover:underline"
-          >
+          <button onClick={() => setShowMore(!showMore)} className="bg-white underline cursor-pointer px-2 py-2 rounded-sm font-semibold flex m-auto text-blue-600 hover:underline">
             {!showMore ? "Ver mais" : "Ver menos"}
           </button>
         </div>
