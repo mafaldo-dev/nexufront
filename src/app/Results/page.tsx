@@ -100,7 +100,7 @@ function ResultsPageContent() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Img
+                  <Image
                     src={result.image!}
                     alt={result.title || "Imagem"}
                     width={100}
