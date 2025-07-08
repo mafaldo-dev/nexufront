@@ -21,37 +21,37 @@ interface Result {
 
 function ResultsPageContent() {
   const searchParams = useSearchParams();
- 
   const query = searchParams.get("q") || "";
+
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [activeTab, setActiveTab] = useState("todas");
 
   const { searchTerm, setSearchTerm, handleSearch } = useSearchHandler(query);
 
   useEffect(() => {
     if (!query) return;
-  
+
     const controller = new AbortController();
     const signal = controller.signal;
-  
-    let isActive = true; 
-  
+    let isActive = true;
+
     const fetchResults = async () => {
       try {
         setLoading(true);
-  
-        const response = await fetch(`https://nexuback.onrender.com/api/searchAll?q=${encodeURIComponent(query)}`, { signal });
-        //const response = await fetch(`http://localhost:3002/api/searchAll?q=${encodeURIComponent(query)}`);
-        if (!response.ok) throw new Error('Erro ao buscar resultados');
+        const response = await fetch(
+          `https://nexuback.onrender.com/api/searchAll?q=${encodeURIComponent(query)}`,
+          { signal }
+        );
+        if (!response.ok) throw new Error("Erro ao buscar resultados");
 
-  
         const data = await response.json();
-        if (isActive) { 
-          setResults(data.results?.filter((result: Result) => result.title && result.snippet && result.url) || []);
+        if (isActive) {
+          setResults(data.results || []);
         }
       } catch (error) {
-        if (isActive) { 
+        if (isActive) {
           console.error("Erro ao buscar resultados", error);
           setResults([]);
         }
@@ -59,85 +59,192 @@ function ResultsPageContent() {
         if (isActive) setLoading(false);
       }
     };
-  
+
     fetchResults();
-  
     return () => {
-      isActive = false; 
+      isActive = false;
       controller.abort();
     };
   }, [query]);
-  
-  const sortedResults = (showMore ? results : results.slice(0, 12)).sort((a, b) => (b.image ? 1 : -1));
+
+  const allResults = results.filter(
+    (result) => result.title && result.snippet && result.url
+  );
+
+  const imageResults = results.filter((result) => result.image);
+
+  const newsResults = results.filter(
+    (result) =>
+      (result.title?.toLowerCase().includes("notícia") ||
+        result.snippet?.toLowerCase().includes("notícia") ||
+        result.title?.toLowerCase().includes("reportagem") ||
+        result.snippet?.toLowerCase().includes("reportagem")) &&
+      result.title &&
+      result.snippet &&
+      result.url
+  );
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "imagens":
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {imageResults.map((result, index) => (
+              <div
+                key={index}
+                className="bg-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border"
+              >
+                <a
+                  href={result.url || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src={result.image!}
+                    alt={result.title || "Imagem"}
+                    className="w-full h-40 object-cover rounded-t-lg"
+                  />
+                  <p className="p-2 text-sm text-gray-700 truncate">
+                    {result.title || "Imagem"}
+                  </p>
+                </a>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "noticias":
+        return (
+          <div className="space-y-6">
+            {newsResults.map((result, index) => (
+              <div
+                key={index}
+                className="p-4 bg-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border"
+              >
+                <a
+                  href={result.url || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-lg font-medium text-blue-600 hover:underline block"
+                >
+                  {result.title || "Título não disponível"}
+                </a>
+                <p className="text-gray-700 text-sm mt-1">
+                  {result.snippet || "Descrição não disponível"}
+                </p>
+                <p className="text-gray-500 text-xs mt-1">{result.url}</p>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "todas":
+      default:
+        return (
+          <div className="space-y-6">
+            {allResults.map((result, index) => (
+              <div
+                key={index}
+                className="p-4 bg-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border"
+              >
+                <a
+                  href={result.url || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-lg font-medium text-blue-600 hover:underline block"
+                >
+                  {result.title || "Título não disponível"}
+                </a>
+                <p className="text-gray-700 text-sm mt-1">
+                  {result.snippet || "Descrição não disponível"}
+                </p>
+                <p className="text-gray-500 text-xs mt-1">{result.url}</p>
+              </div>
+            ))}
+
+            <button
+              onClick={() => setShowMore(!showMore)}
+              className="bg-white underline cursor-pointer px-2 py-2 rounded-sm font-semibold flex m-auto text-blue-600 hover:underline"
+            >
+              {!showMore ? "Ver mais" : "Ver menos"}
+            </button>
+          </div>
+        );
+    }
+  };
 
   return (
-    <div className="min-h-screen p-6 text-gray-900">
-      <Image src={logo} width={200} height={100} alt="Logo nexus earth" className="flex m-auto" />
-      <div className="flex flex-col md:flex-row mt-24 w-full max-w-[90%] mx-auto justify-evenly gap-6 md:gap-16 items-center mb-12">
-        <h2 className="text-2xl md:text-3xl text-black font-semibold mt-4 mb-4 md:mt-7 md:mb-6 text-center md:text-left">
-          Resultados para <span className="text-blue-600">&quot;{query}&quot;</span>
-        </h2>
-        <div className="flex items-center gap-8 justify-center">
-          <form onSubmit={handleSearch} className="relative">
-            <Input
-              type="text"
-              placeholder="Digite sua busca aqui..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-12 bg-gray-200 pl-4 pr-12 text-lg rounded-xl border-2 border-blue-200 focus:border-blue-400"
-            />
-            <Button
-              type="submit"
-              className="absolute right-2 top-2 rounded-full w-8 h-8 p-0 bg-blue-500 hover:bg-blue-600"
-              disabled={!searchTerm.trim()}
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <SearchIcon className="h-4 w-4" />
-              )}
-            </Button>
-          </form>
-          <Link
-            href="/"
-            className="bg-blue-500 text-white hover:bg-blue-300 hover:text-white rounded-sm font-bold px-4 py-2 text-lg"
-          >
-            Voltar
-          </Link>
-        </div>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <form onSubmit={handleSearch} className="relative mb-6">
+        <Input
+          type="text"
+          placeholder="Digite sua busca aqui..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full h-12 bg-gray-200 pl-4 pr-12 text-lg rounded-xl border-2 border-blue-200 focus:border-blue-400"
+        />
+        <Button
+          type="submit"
+          className="absolute right-2 top-2 rounded-full w-8 h-8 p-0 bg-blue-500 hover:bg-blue-600"
+          disabled={!searchTerm.trim()}
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <SearchIcon className="h-4 w-4" />
+          )}
+        </Button>
+      </form>
+
+      <div className="mb-6 flex justify-between items-center">
+        <Link
+          href="/"
+          className="bg-blue-500 text-white hover:bg-blue-300 hover:text-white rounded-sm font-bold px-4 py-2 text-lg"
+        >
+          Voltar
+        </Link>
       </div>
+
+      <div className="flex justify-center gap-4 mb-8 border-b-2 pb-2">
+        <Button
+          onClick={() => setActiveTab("todas")}
+          className={`px-4 py-2 font-semibold rounded-t-lg ${
+            activeTab === "todas"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 text-gray-700"
+          }`}
+        >
+          Todas
+        </Button>
+        <Button
+          onClick={() => setActiveTab("imagens")}
+          className={`px-4 py-2 font-semibold rounded-t-lg ${
+            activeTab === "imagens"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 text-gray-700"
+          }`}
+        >
+          Imagens
+        </Button>
+        <Button
+          onClick={() => setActiveTab("noticias")}
+          className={`px-4 py-2 font-semibold rounded-t-lg ${
+            activeTab === "noticias"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 text-gray-700"
+          }`}
+        >
+          Notícias
+        </Button>
+      </div>
+
       {loading ? (
         <div className="text-center">
           <Loader2 className="h-10 w-10 animate-spin mx-auto text-blue-600" />
-          <p className="text-white mt-2">Buscando...</p>
+          <p className="text-gray-600 mt-2">Buscando...</p>
         </div>
       ) : results.length > 0 ? (
-        <div className="max-w-6xl mx-auto space-y-6">
-          {sortedResults.map((result, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-4 p-4 bg-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border"
-            >
-              {result.image ? (
-                <Image width={90} height={90} src={result.image} alt="Sem imagem"className="w-32 h-32 object-cover rounded-lg" />
-              ) : (
-                <div className="w-32 h-32 bg-gray-300 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-600">Sem imagem</span>
-                </div>
-              )}
-              <div className="flex-1">
-                <a href={result.url || "#"} target="_blank" rel="noopener noreferrer" className="text-lg font-medium text-blue-600 hover:underline block">
-                  {result.title || "Título não disponível"}
-                </a>
-                <p className="text-gray-700 text-sm mt-1">{result.snippet ? result.snippet : "Descrição não disponível"}</p>
-                <p className="text-gray-500 text-xs mt-1">{result.url}</p>
-              </div>
-            </div>
-          ))}
-          <button onClick={() => setShowMore(!showMore)} className="bg-white underline cursor-pointer px-2 py-2 rounded-sm font-semibold flex m-auto text-blue-600 hover:underline">
-            {!showMore ? "Ver mais" : "Ver menos"}
-          </button>
-        </div>
+        <div>{renderContent()}</div>
       ) : (
         <p className="text-center text-gray-600">Nenhum resultado encontrado.</p>
       )}
