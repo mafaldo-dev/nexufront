@@ -29,7 +29,8 @@ function ResultsPageContent() {
   const [activeTab, setActiveTab] = useState("todas");
 
   const { searchTerm, setSearchTerm, handleSearch } = useSearchHandler(query);
-
+  console.log(setResults)
+  console.log(setLoading)
   useEffect(() => {
     if (!query) return;
 
@@ -99,9 +100,11 @@ function ResultsPageContent() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <img
+                  <Img
                     src={result.image!}
-                    alt={result.title || "Imagem"}
+                    alt={result.title || "Imagem"
+                    width={100}
+                    height={100}
                     className="w-full h-40 object-cover rounded-t-lg"
                   />
                   <p className="p-2 text-sm text-gray-700 truncate">
