@@ -14,6 +14,9 @@ export default function Search() {
 	const [loading, setLoading] = useState(false);
 	const { searchTerm, setSearchTerm, handleSearch } = useSearchHandler(query);
 
+	console.log(setQuery)
+	console.log(setLoading)
+
 	return (
 		<div className="min-h-screen from-blue-50 to-white p-4 md:p-8">
 			<div className="max-w-3xl flex flex-col mt-18 mx-auto pt-8 md:pt-16">
