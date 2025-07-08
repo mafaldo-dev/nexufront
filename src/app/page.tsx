@@ -16,6 +16,8 @@ export default function Search() {
 
 	console.log(setQuery)
 	console.log(setLoading)
+	console.log(query)
+	console.log(loading)
 
 	return (
 		<div className="min-h-screen from-blue-50 to-white p-4 md:p-8">
