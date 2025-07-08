@@ -102,7 +102,7 @@ function ResultsPageContent() {
                 >
                   <Img
                     src={result.image!}
-                    alt={result.title || "Imagem"
+                    alt={result.title || "Imagem"}
                     width={100}
                     height={100}
                     className="w-full h-40 object-cover rounded-t-lg"
