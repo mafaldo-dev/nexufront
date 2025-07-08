@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { useSearchHandler } from "@/hooks/useSeachHandler";
 
 import { Loader2, SearchIcon } from "lucide-react";
-import logo from "../../assets/NexusEarth.png";
+//import logo from "../../assets/NexusEarth.png";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
